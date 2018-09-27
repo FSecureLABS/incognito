@@ -144,16 +144,16 @@ void connect_to_machine(char *server_name, char *username, char *password, int a
 		output_status_string("[-] Unable to find a writable share on %s\n", machineName);
 		return;
 	}
-	if (_snprintf(szFullServicePath, MAX_PATH,"%s\\%s", szWritableSharePhysical, "incognito_service.exe") == -1)
+	if (_snprintf(szFullServicePath, MAX_PATH,"%s\\%s", szWritableSharePhysical, "inc_service.exe") == -1)
 		szFullServicePath[sizeof(szFullServicePath)-1] = '\0';
 
 	// copy exe file to remote machine
 	output_status_string("[*] Copying service to %s\n", machineName);
-	strncpy(strrchr(localPath, '\\') + 1, "incognito_service.exe", MAX_PATH-1-(strrchr(localPath, '\\') + 1 - localPath));
+	strncpy(strrchr(localPath, '\\') + 1, "inc_service.exe", MAX_PATH-1-(strrchr(localPath, '\\') + 1 - localPath));
 	localPath[MAX_PATH-1] = '\0';
 	strncpy(rExename, szWritableShare, MAX_PATH-1);
 	rExename[MAX_PATH-1] = '\0';
-	strncat(rExename, "\\incognito_service.exe", MAX_PATH-strlen(rExename));
+	strncat(rExename, "\\inc_service.exe", MAX_PATH-strlen(rExename));
 
 	if (!CopyFileA(localPath, rExename, FALSE))
 	{
@@ -186,15 +186,15 @@ void connect_to_machine(char *server_name, char *username, char *password, int a
     }
 
 	// Create service
-	output_status_string("[*] Creating incognito service on remote host\n");
-	hsvc = CreateServiceA(hscm, "incognito_service", "Incognito Service", SERVICE_ALL_ACCESS, 
+	output_status_string("[*] Creating inc service on remote host\n");
+	hsvc = CreateServiceA(hscm, "inc_service", "Inc Service", SERVICE_ALL_ACCESS, 
                                 SERVICE_WIN32_OWN_PROCESS, SERVICE_DEMAND_START, SERVICE_ERROR_IGNORE,
                                 szFullServicePath, NULL, NULL, NULL, NULL, NULL);
 
     if(!hsvc)
     {
 		output_status_string("[-] Failed to create service. Attempting to open pre-existing service: %d\n", GetLastError());
-		hsvc = OpenServiceA(hscm, "incognito_service", SERVICE_ALL_ACCESS);
+		hsvc = OpenServiceA(hscm, "inc_service", SERVICE_ALL_ACCESS);
         if(!hsvc)
         {
 			output_status_string("[-] Failed to open service: %d\n", GetLastError());
@@ -272,7 +272,7 @@ static void connect_to_named_pipe(char *lpszServer)
 		break;
 	}
 
-	output_status_string("[*] Connecting to incognito service named pipe\n");
+	output_status_string("[*] Connecting to inc service named pipe\n");
 	hPipeR = CreateFileA(szPipeName, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);	
 
 	while(GetLastError() == ERROR_PIPE_BUSY)
@@ -346,6 +346,7 @@ static DWORD WINAPI ReadFromNamedPipe(LPVOID p)
 		if (!ReadFile(p, chBuf, BUFSIZE, &dwRead, NULL) && GetLastError() != ERROR_MORE_DATA) 
 			break;
 		fwrite(chBuf, sizeof(char), dwRead, hOUTPUT);
+		fflush(hOUTPUT);
 	}
 
 	return 0;
@@ -502,7 +503,7 @@ static void cleanup(char *server_name, char *username, char *password)
 		return;
 	}
 	
-	if (_snprintf(szFullServicePath, MAX_PATH,"%s\\%s", szWritableSharePhysical, "incognito_service.exe") == -1)
+	if (_snprintf(szFullServicePath, MAX_PATH,"%s\\%s", szWritableSharePhysical, "inc_service.exe") == -1)
 		szFullServicePath[sizeof(szFullServicePath)-1] = '\0';
 
     // stop and delete the service on remote machine
@@ -513,14 +514,14 @@ static void cleanup(char *server_name, char *username, char *password)
     }
 	else
 	{
-		hsvc = OpenServiceA(hscm, "incognito_service", SERVICE_ALL_ACCESS);
+		hsvc = OpenServiceA(hscm, "inc_service", SERVICE_ALL_ACCESS);
         if(!hsvc)
         {
 			output_status_string("[-] Failed to open service: %d\n", GetLastError());
         }
 		else
 		{
-			output_status_string("[*] Stopping and deleting incognito service on remote host\n");
+			output_status_string("[*] Stopping and deleting inc service on remote host\n");
 			ControlService(hsvc, SERVICE_CONTROL_STOP, &sStatus);
 			DeleteService(hsvc);
 			CloseServiceHandle(hsvc);
@@ -529,11 +530,11 @@ static void cleanup(char *server_name, char *username, char *password)
 	}
 
 	// delete exe file from remote machine
-	strncpy(strrchr(localPath, '\\') + 1, "incognito_service.exe", MAX_PATH-1-(strrchr(localPath, '\\') + 1 - localPath));
+	strncpy(strrchr(localPath, '\\') + 1, "inc_service.exe", MAX_PATH-1-(strrchr(localPath, '\\') + 1 - localPath));
 	localPath[MAX_PATH-1] = '\0';
 	strncpy(rExename, szWritableShare, MAX_PATH-1);
 	rExename[MAX_PATH-1] = '\0';
-	strncat(rExename, "\\incognito_service.exe", MAX_PATH-strlen(rExename));
+	strncat(rExename, "\\inc_service.exe", MAX_PATH-strlen(rExename));
 	
 	output_status_string("[*] Deleting service EXE %s\n", rExename);
 

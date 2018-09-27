@@ -38,54 +38,54 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void enumerate_logged_on_users(char *server, char *username, char *password);
 
-int main(int argc, char *argv[])
-{
-	FILE *fp;
-	char *username, *password, file_line[100], temp_server_name[100];
-	BOOL bFileMode = FALSE;
-
-	if (argc < 2)
-	{
-	  fprintf(stderr, "usage: \n\n%s <server_name_or_ip> | -f <server_list_file> [username] [password]\n", argv[0]);
-	  exit(1);
-	}
-	if (!_stricmp(argv[1], "-f") && argc > 2)
-		bFileMode = TRUE;
-
-	if (argc == 5)
-	{
-		username = argv[3];
-		password = argv[4];
-	}
-	else if (argc == 4)
-	{
-		username = argv[2];
-		password = argv[3];
-	}
-	else
-	{
-		username = NULL;
-		password = NULL;
-	}
-
-	printf("[*] Scanning for logged on users...\n\n");
-	printf("Server Name\t\tUsername\n");
-	printf("------------------------------------------------------\n");
-	
-	if (bFileMode)
-	{
-		fp = fopen(argv[2], "r");
-		while (fgets(file_line, sizeof(file_line)-1, fp))
-		{
-			sscanf(file_line, "%s\n", temp_server_name);
-			enumerate_logged_on_users(temp_server_name, username, password);
-		}
-	}
-	else
-		enumerate_logged_on_users(argv[1], username, password);
-	
-	return 0;
-}
+//int main(int argc, char *argv[])
+//{
+//	FILE *fp;
+//	char *username, *password, file_line[100], temp_server_name[100];
+//	BOOL bFileMode = FALSE;
+//
+//	if (argc < 2)
+//	{
+//	  fprintf(stderr, "usage: \n\n%s <server_name_or_ip> | -f <server_list_file> [username] [password]\n", argv[0]);
+//	  exit(1);
+//	}
+//	if (!_stricmp(argv[1], "-f") && argc > 2)
+//		bFileMode = TRUE;
+//
+//	if (argc == 5)
+//	{
+//		username = argv[3];
+//		password = argv[4];
+//	}
+//	else if (argc == 4)
+//	{
+//		username = argv[2];
+//		password = argv[3];
+//	}
+//	else
+//	{
+//		username = NULL;
+//		password = NULL;
+//	}
+//
+//	printf("[*] Scanning for logged on users...\n\n");
+//	printf("Server Name\t\tUsername\n");
+//	printf("------------------------------------------------------\n");
+//	
+//	if (bFileMode)
+//	{
+//		fp = fopen(argv[2], "r");
+//		while (fgets(file_line, sizeof(file_line)-1, fp))
+//		{
+//			sscanf(file_line, "%s\n", temp_server_name);
+//			enumerate_logged_on_users(temp_server_name, username, password);
+//		}
+//	}
+//	else
+//		enumerate_logged_on_users(argv[1], username, password);
+//	
+//	return 0;
+//}
 
 void enumerate_logged_on_users(char *server, char *username, char *password)
 {

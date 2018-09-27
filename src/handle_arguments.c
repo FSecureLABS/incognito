@@ -63,7 +63,7 @@ void output_string(char *string, ...)
 	if (hOUTPUT == stdout)
 		printf("%s", temp);
 	else
-		WriteFile(hOUTPUT, temp, strlen(temp), &dwWritten, NULL);
+		WriteFile(hOUTPUT, temp, (DWORD)strlen(temp), &dwWritten, NULL);
 
 	va_end(ap);
 }
@@ -92,10 +92,10 @@ void output_status_string(char *string, ...)
 	{
 		if (grepable_mode)
 		{
-			WriteFile(hOUTPUT, host, strlen(host), &dwWritten, NULL);
-			WriteFile(hOUTPUT, " / [Status] / ", strlen(" / [Status] / "), &dwWritten, NULL);
+			WriteFile(hOUTPUT, host, (DWORD)strlen(host), &dwWritten, NULL);
+			WriteFile(hOUTPUT, " / [Status] / ", (DWORD)strlen(" / [Status] / "), &dwWritten, NULL);
 		}
-		WriteFile(hOUTPUT, temp, strlen(temp), &dwWritten, NULL);
+		WriteFile(hOUTPUT, temp, (DWORD)strlen(temp), &dwWritten, NULL);
 	}
 
 	va_end(ap);
@@ -116,9 +116,9 @@ void output_grepable_string(char *string, ...)
 		printf("%s / %s", host, temp);
 	else
 	{	
-		WriteFile(hOUTPUT, host, strlen(host), &dwWritten, NULL);
-		WriteFile(hOUTPUT, " / ", strlen(" / "), &dwWritten, NULL);
-		WriteFile(hOUTPUT, temp, strlen(temp), &dwWritten, NULL);
+		WriteFile(hOUTPUT, host, (DWORD)strlen(host), &dwWritten, NULL);
+		WriteFile(hOUTPUT, " / ", (DWORD)strlen(" / "), &dwWritten, NULL);
+		WriteFile(hOUTPUT, temp, (DWORD)strlen(temp), &dwWritten, NULL);
 	}
 
 	va_end(ap);
@@ -128,9 +128,11 @@ BOOL output_counted_string(char *string, DWORD dwRead)
 {
 	DWORD dwWritten;
 
-	if (hOUTPUT == stdout)
-		return fwrite(string, sizeof(char), dwRead, hOUTPUT);
-	else
+	if (hOUTPUT == stdout){
+		DWORD dwWritten = (DWORD)fwrite(string, sizeof(char), dwRead, hOUTPUT);
+		fflush(hOUTPUT);
+		return dwWritten;
+	} else
 		return WriteFile(hOUTPUT, string, dwRead, &dwWritten, NULL);
 }
 
@@ -141,7 +143,7 @@ BOOL read_counted_input(char *string, int string_size, DWORD *dwRead)
 	if (hINPUT == stdin)
 	{
 		ret_value = gets(string);
-		*dwRead = strlen(string)+1;
+		*dwRead = (DWORD)strlen(string)+1;
 		return (BOOL)ret_value;
 	}
 	else
@@ -156,11 +158,6 @@ void print_error_if_system()
 
 void usage(char *programName)
 {
-	output_string("\nIncognito v2.0, by Luke Jennings (0xlukej@gmail.com)\n");
-	output_string("=========================================================\n\n");
-	output_string("MWR Labs project page: http://labs.mwrinfosecurity.com/research-projects/security-implications-of-windows-access-tokens/\n\n");
-	output_string("Whitepaper: http://labs.mwrinfosecurity.com/assets/142/mwri_security-implications-of-windows-access-tokens_2008-04-14.pdf\n\n\n");
-
 	output_string("Usage:\n\n");
 	output_string("%s [global options] COMMAND [options] arguments\n", programName);
 	output_string("\n\n");

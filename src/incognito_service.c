@@ -46,18 +46,18 @@ BOOL InitializePipe(LPCTSTR lpszPipe);
 
 HANDLE hPipeR, hPipeW;
 
-void main() 
-{ 
-    SERVICE_TABLE_ENTRY ServiceTable[2];
-    ServiceTable[0].lpServiceName = "incognito_service";
-    ServiceTable[0].lpServiceProc = (LPSERVICE_MAIN_FUNCTION)ServiceMain;
-
-    ServiceTable[1].lpServiceName = NULL;
-    ServiceTable[1].lpServiceProc = NULL;
-
-    // Start the control dispatcher thread for our service
-    StartServiceCtrlDispatcher(ServiceTable);  
-}
+//void main() 
+//{ 
+//    SERVICE_TABLE_ENTRY ServiceTable[2];
+//    ServiceTable[0].lpServiceName = "inc_service";
+//    ServiceTable[0].lpServiceProc = (LPSERVICE_MAIN_FUNCTION)ServiceMain;
+//
+//    ServiceTable[1].lpServiceName = NULL;
+//    ServiceTable[1].lpServiceProc = NULL;
+//
+//    // Start the control dispatcher thread for our service
+//    StartServiceCtrlDispatcher(ServiceTable);  
+//}
 
 void ServiceMain(int argc, char** argv) 
 { 
@@ -70,7 +70,7 @@ void ServiceMain(int argc, char** argv)
     ServiceStatus.dwWaitHint           = 0; 
  
     hStatus = RegisterServiceCtrlHandler(
-		"incognito_service", 
+		"inc_service", 
 		(LPHANDLER_FUNCTION)ControlHandler); 
 
     if (hStatus == (SERVICE_STATUS_HANDLE)0) 

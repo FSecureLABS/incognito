@@ -57,6 +57,8 @@ void execute_process_with_primary_token(char *requested_username, char *command,
 	BOOL bTokensAvailable = FALSE, delegation_available = FALSE, assignprimarypriv_gained = FALSE;
 	TOKEN_PRIVS token_privs;
 
+	output_status_string("[*] Attempting to run command: %s\n\n", command);
+		
 	// Enumerate tokens
 	output_status_string("[*] Enumerating tokens\n");
 
@@ -188,13 +190,13 @@ void create_process(HANDLE token, char *command, BOOL console_mode, SECURITY_IMP
 	else
 	{
 		if (CreateProcessAsUserA(
-      		primary_token,            // client's access token
+      		primary_token,     // client's access token
       		NULL,              // file to execute
-      		command,     // command line
+      		command,           // command line
       		NULL,              // pointer to process SECURITY_ATTRIBUTES
       		NULL,              // pointer to thread SECURITY_ATTRIBUTES
       		FALSE,             // handles are not inheritable
-      		CREATE_NEW_CONSOLE,   // creation flags
+      		CREATE_NEW_CONSOLE,// creation flags
       		NULL,              // pointer to new environment block
      		NULL,              // name of current directory
       		&si,               // pointer to STARTUPINFO structure
@@ -204,6 +206,6 @@ void create_process(HANDLE token, char *command, BOOL console_mode, SECURITY_IMP
 		else 
 			output_status_string("[-] Failed to create new process: %d\n", GetLastError());
 	}
-
+	
 	CloseHandle(primary_token);
 }

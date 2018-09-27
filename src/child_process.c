@@ -118,12 +118,12 @@ static void CreateChildProcess(HANDLE token, char *command, PROCESS_INFORMATION 
 	siStartInfo.hStdOutput = hChildStdoutWr;
 	siStartInfo.hStdInput = hChildStdinRd;
 	siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
-	siStartInfo.lpDesktop = "incognito\\default";
+	siStartInfo.lpDesktop = "inc\\default";
 
 	// Create new window station and save handle to existing one
 	old_winstation = GetProcessWindowStation();
 	new_winstation = CreateWindowStationA(
-						  "incognito",
+						  "inc",
 						  (DWORD)NULL,
 						  MAXIMUM_ALLOWED,
 						  NULL

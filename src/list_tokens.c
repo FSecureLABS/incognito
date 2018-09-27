@@ -362,7 +362,7 @@ SavedToken *get_token_list(DWORD *num_tokens_enum, TOKEN_PRIVS *token_privs)
 				CloseHandle(hObject2);
 			}
 
-			pProcessInfo = (PSYSTEM_PROCESS_INFORMATION)((ULONG)pProcessInfo + (ULONG)pProcessInfo->NextEntryOffset);
+			pProcessInfo = (PSYSTEM_PROCESS_INFORMATION)((size_t)pProcessInfo + (ULONG)pProcessInfo->NextEntryOffset);
 		} 
 	}
 
