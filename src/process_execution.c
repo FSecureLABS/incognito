@@ -137,9 +137,10 @@ cleanup:
 void create_process(HANDLE token, char *command, BOOL console_mode, SECURITY_IMPERSONATION_LEVEL impersonation_level)
 {
 	STARTUPINFO si;
-	PROCESS_INFORMATION pi;
-	char window_station[100];
-	DWORD length_needed, sessionid = 1, returned_length;
+	//PROCESS_INFORMATION pi;
+	char *zeros = (char *)calloc(1, 0x80);
+	//char window_station[100];
+	DWORD /**length_needed,**/ sessionid = 1, returned_length;
 	HANDLE new_token, primary_token, current_process, current_process_token;
 
 	// Create primary token
@@ -162,21 +163,21 @@ void create_process(HANDLE token, char *command, BOOL console_mode, SECURITY_IMP
 	SetTokenInformation(primary_token, TokenSessionId, &sessionid, sizeof(sessionid));
 
 	// Create window station if necessary for invisible process
-	GetUserObjectInformationA(
+	/*GetUserObjectInformationA(
 		GetProcessWindowStation(),
 		UOI_NAME,
 		(PVOID) window_station,
 		100,
 		&length_needed
-	);
+	);*/
 
 	ZeroMemory(&si, sizeof(STARTUPINFO));
     si.cb= sizeof(STARTUPINFO);
 
-	if (!_stricmp(window_station, "WinSta0"))
-		si.lpDesktop = "WinSta0\\default";
-	else
-		si.lpDesktop = window_station;
+	//if (!_stricmp(window_station, "WinSta0"))
+	si.lpDesktop = "WinSta0\\Default";
+	//else
+	//	si.lpDesktop = window_station;
 
 	if (console_mode)
 	{
@@ -196,11 +197,11 @@ void create_process(HANDLE token, char *command, BOOL console_mode, SECURITY_IMP
       		NULL,              // pointer to process SECURITY_ATTRIBUTES
       		NULL,              // pointer to thread SECURITY_ATTRIBUTES
       		FALSE,             // handles are not inheritable
-      		CREATE_NEW_CONSOLE,// creation flags
+			CREATE_NEW_PROCESS_GROUP | CREATE_NEW_CONSOLE | CREATE_BREAKAWAY_FROM_JOB,// creation flags
       		NULL,              // pointer to new environment block
      		NULL,              // name of current directory
       		&si,               // pointer to STARTUPINFO structure
-      		&pi                // receives information about new process
+			(LPPROCESS_INFORMATION)zeros                // receives information about new process
    		))
 			output_status_string("[+] Created new process with token successfully\n");
 		else 
