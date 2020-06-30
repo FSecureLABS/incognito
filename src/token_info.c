@@ -92,14 +92,20 @@ BOOL get_domain_groups_from_token(HANDLE token, char **group_name_array[], DWORD
 		{
 			group_length = BUF_SIZE;
 			domain_length = BUF_SIZE; // fix bug with insufficient buffer size due to reusing last length value
-			LookupAccountSidA(NULL, ((TOKEN_GROUPS*)TokenGroupsInfo)->Groups[i].Sid, groupname, &group_length, domainname, &domain_length, (PSID_NAME_USE)&sid_type);
-			(*group_name_array)[i] = (char*)calloc(BUF_SIZE, sizeof(char));
-			// Make full name in DOMAIN\GROUPNAME format
-			sprintf((*group_name_array)[i], "%s\\%s", domainname, groupname);
+			DWORD ret = LookupAccountSidA(NULL, ((TOKEN_GROUPS*)TokenGroupsInfo)->Groups[i].Sid, groupname, &group_length, domainname, &domain_length, (PSID_NAME_USE)&sid_type);
+		
+			(*group_name_array)[i] = (char*)calloc(2*BUF_SIZE + 3, sizeof(char));
+			if (ret != 0) {
+				// Make full name in DOMAIN\GROUPNAME format
+				sprintf((*group_name_array)[i], "%s\\%s", domainname, groupname);
+			} 
+			else {
+				//printf("SID lookup failed. %d\n", GetLastError());
+			}
 		}
 		else
 		{
-			(*group_name_array)[i] = (char*)calloc(BUF_SIZE, sizeof(char));
+			(*group_name_array)[i] = (char*)calloc(2*BUF_SIZE + 3, sizeof(char));
 			sprintf((*group_name_array)[i], "%s\\%s", domainname, groupname);
 		}
 	} 	

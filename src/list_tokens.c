@@ -571,7 +571,7 @@ void process_user_token(HANDLE token, unique_user_token *uniq_tokens, DWORD *num
 			full_name = (char*)group_name_array[i];
 
 		// Check
-		if (!_stricmp("None", strchr(full_name, '\\') + 1) || !_stricmp("Everyone", strchr(full_name, '\\') + 1)
+		if ( strlen(full_name) == 0 || !_stricmp("None", strchr(full_name, '\\') + 1) || !_stricmp("Everyone", strchr(full_name, '\\') + 1)
 			|| !_stricmp("LOCAL", strchr(full_name, '\\') + 1) || !_stricmp("NULL SID", strchr(full_name, '\\') + 1)
 			|| !_stricmp("CONSOLE LOGON", strchr(full_name, '\\') + 1))
 			continue;
