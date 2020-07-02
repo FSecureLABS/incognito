@@ -268,7 +268,7 @@ void handle_options(int argc, char *argv[])
 			return;
 		}
 
-		execute_process_with_primary_token(argv[optind], argv[optind+1], console_mode);
+		execute_process_with_primary_token(argv[optind], 1, argv[optind+1], console_mode);
 		return;
 	}
 	else

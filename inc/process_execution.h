@@ -33,6 +33,6 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INC_PROCESS_EXECUTION_H
 #define INC_PROCESS_EXECUTION_H
 
-void execute_process_with_primary_token(char *requested_username, char *command, BOOL console_mode);
+void execute_process_with_primary_token(char** requested_username, DWORD num_of_targets, char *command, BOOL console_mode);
 
 #endif

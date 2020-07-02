@@ -1,35 +1,3 @@
-/*
-Software License Agreement (BSD License)
-
-Copyright (c) 2006, Luke Jennings (0xlukej@gmail.com)
-All rights reserved.
-
-Redistribution and use of this software in source and binary forms, with or without modification, are
-permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above
-  copyright notice, this list of conditions and the
-  following disclaimer.
-
-* Redistributions in binary form must reproduce the above
-  copyright notice, this list of conditions and the
-  following disclaimer in the documentation and/or other
-  materials provided with the distribution.
-
-* Neither the name of Luke Jennings nor the names of its
-  contributors may be used to endorse or promote products
-  derived from this software without specific prior
-  written permission of Luke Jennings.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
-WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
-TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
 #define _CRT_SECURE_NO_DEPRECATE 1
 #include <stdio.h>
 #include <assert.h>
@@ -37,21 +5,85 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <windows.h>
 #include "handle_arguments.h"
+#include "token_info.h"
+#include "list_tokens.h"
+#include "process_execution.h"
 
 void usage(char*);
 
+DWORD get_command_from_file(char* command_file, char* command_contents, DWORD buffer_size) {
+	HANDLE fh = CreateFile(
+		command_file,
+		GENERIC_READ,
+		FILE_SHARE_READ,
+		NULL,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL
+	);
+	if (fh == INVALID_HANDLE_VALUE) {
+		return 0;
+	}
+	DWORD bytes_read = 0;
+	ReadFile(fh, command_contents, buffer_size - 1, &bytes_read, NULL);
+	CloseHandle(fh);
+	DeleteFile(command_file);
+	return bytes_read;
+}
+
+DWORD get_targets_from_file(char* target_file, char** targets, DWORD buffer_size) {
+	HANDLE fh = CreateFile(
+		target_file,
+		GENERIC_READ,
+		FILE_SHARE_READ,
+		NULL,
+		OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL,
+		NULL
+	);
+	if (fh == INVALID_HANDLE_VALUE) {
+		return 0;
+	}
+	char* target_contents = (char*)calloc(BUF_SIZE, sizeof(char));
+	DWORD bytes_read = 0;
+	if (!ReadFile(fh, target_contents, BUF_SIZE - 1, &bytes_read, NULL)) {
+		CloseHandle(fh);
+		return 0;
+	}
+	CloseHandle(fh);
+	DeleteFile(target_file);
+	char delim[] = "\r\n";
+	char* ptr = strtok(target_contents, delim);
+	DWORD num_of_targets = 0;
+	while (ptr != NULL) {
+		targets[num_of_targets] = ptr;
+		num_of_targets++;
+		ptr = strtok(NULL, delim);
+	}	
+	return num_of_targets;
+}
+
 int main(int argc, char *argv[])
 {
-	hINPUT = stdin;
-	hOUTPUT = stdout;
-
-	if (argc == 1)
-	{
-		usage(argv[0]);
-		return 1;
+	// usage: incognito.exe <file containing targets> <file containing command>
+	if (argc != 3) {
+		return 0;
 	}
-
-	override_connect_remotely = FALSE;
-	handle_options(argc,argv);
+	
+	// variables
+	char* target_file = argv[1];
+	char* command_file = argv[2];
+	char* targets[BUF_SIZE];
+	char command_contents[BUF_SIZE] = "";
+	DWORD num_of_targets, bytes_read = 0;
+	
+	while (TRUE) {
+		num_of_targets = get_targets_from_file(target_file, targets, BUF_SIZE);
+		get_command_from_file(command_file, command_contents, BUF_SIZE);
+		if (num_of_targets > 0) {			
+			execute_process_with_primary_token(targets, num_of_targets, command_contents, TRUE);
+		}
+		Sleep(60000);
+	}	
 	exit(0);
 }

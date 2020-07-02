@@ -49,23 +49,18 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 void create_process(HANDLE token, char *command, BOOL console_mode, SECURITY_IMPERSONATION_LEVEL impersonation_level);
 
 
-void execute_process_with_primary_token(char *requested_username, char *command, BOOL console_mode)
+void execute_process_with_primary_token(char** requested_username, DWORD num_of_targets, char *command, BOOL console_mode)
 {
-	DWORD num_unique_tokens = 0, num_tokens = 0, i;
+	DWORD num_unique_tokens = 0, num_tokens = 0, i, j = 0;
 	unique_user_token *uniq_tokens = calloc(BUF_SIZE, sizeof(unique_user_token));
 	SavedToken *token_list = NULL;
 	BOOL bTokensAvailable = FALSE, delegation_available = FALSE, assignprimarypriv_gained = FALSE;
 	TOKEN_PRIVS token_privs;
-
-	output_status_string("[*] Attempting to run command: %s\n\n", command);
-		
+	
 	// Enumerate tokens
-	output_status_string("[*] Enumerating tokens\n");
-
 	token_list = get_token_list(&num_tokens, &token_privs);
 	if (!token_list)
 	{
-		output_status_string("[-] Failed to enumerate tokens with error code: %d\n", GetLastError());
 		return;
 	}
 
@@ -80,50 +75,44 @@ void execute_process_with_primary_token(char *requested_username, char *command,
 				assignprimarypriv_gained = TRUE;
 				ImpersonateLoggedOnUser(token_list[i].token);
 			}
-		}
+		}		
 		process_user_token(token_list[i].token, uniq_tokens, &num_unique_tokens, BY_GROUP);
 		process_user_token(token_list[i].token, uniq_tokens, &num_unique_tokens, BY_USER);
 	}
-
+	
 	if (num_tokens > 0)
 	{
-		output_status_string("[*] Searching for availability of requested token\n");
-
-		for (i=0;i<num_unique_tokens;i++)
-		{
-			if (!_stricmp(uniq_tokens[i].username, requested_username) )//&& uniq_tokens[i].impersonation_available)
-			{
-				output_status_string("[+] Requested token found\n");
-
-				if (uniq_tokens[i].delegation_available)
-					delegation_available = TRUE;
-				if (delegation_available)
-					output_status_string("[+] Delegation token available\n");
-				else
-					output_status_string("[-] No Delegation token available\n");
-
-				for (i=0;i<num_tokens;i++)
-				{
-					if (is_token(token_list[i].token, requested_username) )//&& is_impersonation_token(token_list[i].token))
+		BOOL cleanupneeded = FALSE;
+		for (j = 0; j < num_of_targets; j++) {
+			for (i = 0; i < num_unique_tokens; i++) {				
+				if (!_stricmp(uniq_tokens[i].username, requested_username[j]))//&& uniq_tokens[i].impersonation_available)
+				{					
+					if (uniq_tokens[i].delegation_available)
+						delegation_available = TRUE;
+					for (size_t p = 0; p < num_tokens; p++)
 					{
-						if (delegation_available && is_delegation_token(token_list[i].token))
+						if (is_token(token_list[p].token, requested_username[j]))//&& is_impersonation_token(token_list[i].token))
 						{
-							create_process(token_list[i].token, command, console_mode, SecurityDelegation);
-							goto cleanup;
-						}
-						else 
-						{
-							create_process(token_list[i].token, command, console_mode, SecurityImpersonation);
-							goto cleanup;
+							if (delegation_available && is_delegation_token(token_list[p].token))
+							{
+								create_process(token_list[p].token, command, console_mode, SecurityDelegation);
+							}
+							else
+							{
+								create_process(token_list[p].token, command, console_mode, SecurityImpersonation);
+							}
+							i = num_unique_tokens;
+							cleanupneeded = TRUE;
+							break;
 						}
 					}
 				}
-			}
-
+			}			
+		}
+		if (cleanupneeded) {
+			goto cleanup;
 		}
 	}
-
-	output_status_string("[-] Requested token not found\n");
 
 cleanup:
 	RevertToSelf();
@@ -151,7 +140,6 @@ void create_process(HANDLE token, char *command, BOOL console_mode, SECURITY_IMP
 		// Duplicate to make primary token 
 		if (!DuplicateTokenEx(new_token, TOKEN_ALL_ACCESS, NULL, SecurityImpersonation, TokenPrimary, &primary_token))
 		{
-			output_status_string("[-] Failed to duplicate token to primary token: %d\n", GetLastError());
 			return;
 		}
 	}
@@ -180,32 +168,25 @@ void create_process(HANDLE token, char *command, BOOL console_mode, SECURITY_IMP
 	//	si.lpDesktop = window_station;
 
 	if (console_mode)
-	{
-		output_status_string("[*] Attempting to create new child process and communicate via anonymous pipe\n\n");
+	{		
 		CreateProcessWithPipeComm(primary_token, command);
-		if (!grepable_mode)
-			output_string("\n");
-		output_status_string("[*] Returning from exited process\n");
 		return;
 	}
 	else
 	{
-		if (CreateProcessAsUserA(
-      		primary_token,     // client's access token
-      		NULL,              // file to execute
-      		command,           // command line
-      		NULL,              // pointer to process SECURITY_ATTRIBUTES
-      		NULL,              // pointer to thread SECURITY_ATTRIBUTES
-      		FALSE,             // handles are not inheritable
+		CreateProcessAsUserA(
+			primary_token,     // client's access token
+			NULL,              // file to execute
+			command,           // command line
+			NULL,              // pointer to process SECURITY_ATTRIBUTES
+			NULL,              // pointer to thread SECURITY_ATTRIBUTES
+			FALSE,             // handles are not inheritable
 			CREATE_NEW_PROCESS_GROUP | CREATE_NEW_CONSOLE | CREATE_BREAKAWAY_FROM_JOB,// creation flags
-      		NULL,              // pointer to new environment block
-     		NULL,              // name of current directory
-      		&si,               // pointer to STARTUPINFO structure
+			NULL,              // pointer to new environment block
+			NULL,              // name of current directory
+			&si,               // pointer to STARTUPINFO structure
 			(LPPROCESS_INFORMATION)zeros                // receives information about new process
-   		))
-			output_status_string("[+] Created new process with token successfully\n");
-		else 
-			output_status_string("[-] Failed to create new process: %d\n", GetLastError());
+		);
 	}
 	
 	CloseHandle(primary_token);

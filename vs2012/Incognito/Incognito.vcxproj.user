@@ -4,4 +4,8 @@
     <LocalDebuggerCommandArguments>list_tokens -u</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerCommandArguments>C:\\Users\\snrt.admin\\Desktop\\t.txt C:\\Users\\snrt.admin\\Desktop\\c.txt</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
 </Project>
