@@ -1,0 +1,12 @@
+
+*.obj
+*.tlog
+*.pdb
+*.log
+*.ipch
+*.ipdb
+*.iobj
+*.opendb
+*.db
+vs2012/.vs/Incognito/v15/.suo
+*.exe
