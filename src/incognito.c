@@ -6,6 +6,27 @@
 #include <windows.h>
 #include "process_execution.h"
 
+void strip_spaces(char* input) {
+	size_t sl = strlen(input), index;
+	for (index = 0; index < sl; index++) {
+		if (input[index] == ' ') {
+			memmove(&input[index], &input[index + 1], sl - index);
+			index--;
+		}
+		else {
+			break;
+		}
+	}
+	for (index = strlen(input) - 1; index > 0; index--) {
+		if (input[index] == ' ') {
+			input[index] = '\0';
+		}
+		else {
+			break;
+		}
+	}
+}
+
 void parse_config(char* filename) {
 	// read file
 	HANDLE fh = CreateFile(
@@ -32,7 +53,6 @@ void parse_config(char* filename) {
 	// parse config items
 	char* targets_loc = strstr(file_contents, "targets:") + strlen("targets:");
 	char* command_loc = strstr(file_contents, "command:") + strlen("command:");
-	char* hosts_loc = strstr(file_contents, "hosts:") + strlen("hosts:");
 
 	// tokenize input
 	char* ptr = strtok(file_contents, "\r\n");
@@ -66,52 +86,12 @@ void parse_config(char* filename) {
 		}
 		// remove leading spaces
 		for (size_t j = 0; j < ti; j++) {
-			size_t sl = strlen(targets[j]);
-			for (size_t index = 0; index < sl; index++) {
-				if (targets[j][index] == ' ') {
-					memmove(&targets[j][index], &targets[j][index + 1], sl - index);
-					index--;
-				}
-				else {
-					break;
-				}
-			}
-		}
-		// remove trailing spaces
-		for (size_t j = 0; j < ti; j++) {
-			size_t sl = strlen(targets[j]);
-			for (size_t index = sl - 1; index > 0; index--) {
-				if (targets[j][index] == ' ') {
-					targets[j][index] = '\0';
-				}
-				else {
-					break;
-				}
-			}
+			strip_spaces(targets[j]);
 		}
 	}
 	// look for command
 	if (command_loc != NULL) {
-		// remove leading spaces
-		size_t sl = strlen(command_loc);
-		for (size_t index = 0; index < sl; index++) {
-			if (command_loc[index] == ' ') {
-				memmove(&command_loc[index], &command_loc[index + 1], sl - index);
-				index--;
-			}
-			else {
-				break;
-			}
-		}
-		// remove trailing spaces
-		for (size_t index = sl - 1; index > 0; index--) {
-			if (command_loc[index] == ' ') {
-				command_loc[index] = '\0';
-			}
-			else {
-				break;
-			}
-		}
+		strip_spaces(command_loc);
 	}
 	// do it!
 	if (strlen(command_loc) > 0 && num_targets > 0) {

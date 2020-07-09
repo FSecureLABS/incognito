@@ -1,1 +1,10 @@
 budz branch
+
+usage: incognito.exe <config file>
+
+the config file is an .ini-style text file.  currently the fields are "targets" and "command".  "targets" is a comma-separated list of usernames and/or groups whose tokens will be looked for.  "command" is the command that will be run as each target whose token is found.  spaces before and after the command and usernames is acceptable.
+
+below is an example config file:
+
+targets: joe,bob,bill,Admins,  Users,desktop-1nb3dn1\user    , nt authority\system
+command: cmd.exe /c "net users" >> C:\\Users\\user\\Desktop\\test.txt
